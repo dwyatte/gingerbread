@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# add ip to XQuartz acl
+# add ip to X11 acl
 ip=$(python -c 'import socket; print(socket.gethostbyname(socket.gethostname()))')
 xhost + $ip
 trap 'xhost - $ip' EXIT
