@@ -93,3 +93,5 @@ ENV/
 # Misc
 *~
 .idea
+.DS_Store
+MNIST_data
