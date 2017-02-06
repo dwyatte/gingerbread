@@ -22,12 +22,12 @@ RUN curl -O https://bootstrap.pypa.io/get-pip.py && \
     python get-pip.py && \
     rm get-pip.py
 
-COPY requirements_ubuntu-14.04_cpu.txt /
+COPY requirements.cpu.txt /
 
 RUN pip --no-cache-dir install -r requirements_ubuntu-14.04_cpu.txt && \
     python -m ipykernel.kernelspec
 
-RUN rm -f /requirements_ubuntu-14.04.txt
+RUN rm -f /requirements..txt
 
 # TensorBoard
 EXPOSE 6006
