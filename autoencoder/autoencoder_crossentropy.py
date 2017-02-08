@@ -48,6 +48,7 @@ biases = {
     'decoder_b1': tf.Variable(tf.zeros([n_input])),
 }
 
+
 # Building the encoder
 def encoder(x):
     # Encoder Hidden layer with sigmoid activation #1
