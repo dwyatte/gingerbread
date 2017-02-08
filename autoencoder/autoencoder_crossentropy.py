@@ -20,54 +20,48 @@ from tensorflow.examples.tutorials.mnist import input_data
 mnist = input_data.read_data_sets("MNIST_data", one_hot=True)
 
 # Parameters
-learning_rate = 0.01
-training_epochs = 50
+learning_rate = 1.0
+l1_lambda = 10e-5
+training_epochs = 100
 batch_size = 256
 test_step = 1
 examples_to_show = 10
+epsilon = 1e-10
 
 # Network Parameters
-n_hidden_1 = 32 # 1st layer num features
-n_hidden_2 = 16 # 2nd layer num features
+n_hidden = 32 # 1st layer num features
 n_input = 784 # MNIST data input (img shape: 28*28)
 
 # tf Graph input (only pictures)
 X = tf.placeholder("float", [None, n_input])
 
+# glorot initialization
+minval = -4 * np.sqrt(6. / (n_hidden + n_input))
+maxval = 4 * np.sqrt(6. / (n_hidden + n_input))
+
 weights = {
-    'encoder_h1': tf.Variable(tf.random_normal([n_input, n_hidden_1])),
-    'encoder_h2': tf.Variable(tf.random_normal([n_hidden_1, n_hidden_2])),
-    'decoder_h1': tf.Variable(tf.random_normal([n_hidden_2, n_hidden_1])),
-    'decoder_h2': tf.Variable(tf.random_normal([n_hidden_1, n_input])),
+    'encoder_h1': tf.Variable(tf.random_uniform([n_input, n_hidden], minval, maxval)),
+    'decoder_h1': tf.Variable(tf.random_uniform([n_hidden, n_input], minval, maxval)),
 }
 biases = {
-    'encoder_b1': tf.Variable(tf.random_normal([n_hidden_1])),
-    'encoder_b2': tf.Variable(tf.random_normal([n_hidden_2])),
-    'decoder_b1': tf.Variable(tf.random_normal([n_hidden_1])),
-    'decoder_b2': tf.Variable(tf.random_normal([n_input])),
+    'encoder_b1': tf.Variable(tf.zeros([n_hidden])),
+    'decoder_b1': tf.Variable(tf.zeros([n_input])),
 }
-
 
 # Building the encoder
 def encoder(x):
     # Encoder Hidden layer with sigmoid activation #1
-    layer_1 = tf.nn.sigmoid(tf.add(tf.matmul(x, weights['encoder_h1']),
-                                   biases['encoder_b1']))
-    # Decoder Hidden layer with sigmoid activation #2
-    layer_2 = tf.nn.sigmoid(tf.add(tf.matmul(layer_1, weights['encoder_h2']),
-                                   biases['encoder_b2']))
-    return layer_2
+    layer_1 = tf.nn.relu(tf.add(tf.matmul(x, weights['encoder_h1']),
+                                biases['encoder_b1']))
+    return layer_1
 
 
 # Building the decoder
 def decoder(x):
     # Encoder Hidden layer with sigmoid activation #1
     layer_1 = tf.nn.sigmoid(tf.add(tf.matmul(x, weights['decoder_h1']),
-                                   biases['decoder_b1']))
-    # Decoder Hidden layer with sigmoid activation #2
-    layer_2 = tf.nn.sigmoid(tf.add(tf.matmul(layer_1, weights['decoder_h2']),
-                                   biases['decoder_b2']))
-    return layer_2
+                            biases['decoder_b1']))
+    return layer_1
 
 # Construct model
 encoder_op = encoder(X)
@@ -78,9 +72,12 @@ y_pred = decoder_op
 # Targets (Labels) are the input data.
 y_true = X
 
-# Define loss and optimizer, minimize the squared error
-cost = tf.reduce_mean(tf.pow(y_true - y_pred, 2))
-optimizer = tf.train.RMSPropOptimizer(learning_rate).minimize(cost)
+# Define loss and optimizer
+binary_crossentropy = -(tf.multiply(y_true, tf.log(tf.clip_by_value(y_pred, epsilon, 1-epsilon))) +
+                        tf.multiply((1-y_true), tf.log(tf.clip_by_value(1-y_pred, epsilon, 1-epsilon))))
+l1 = tf.abs(weights['encoder_h1'])
+cost = tf.reduce_mean(binary_crossentropy) + l1_lambda*tf.reduce_mean(l1)
+optimizer = tf.train.AdadeltaOptimizer(learning_rate).minimize(cost)
 
 # Initializing the variables
 init = tf.global_variables_initializer()
