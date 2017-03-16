@@ -74,7 +74,7 @@ y_pred = decoder_op
 y_true = X
 
 # Define loss and optimizer
-binary_crossentropy = -(tf.multiply(y_true, tf.log(tf.clip_by_value(y_pred, epsilon, 1-epsilon))) +
+binary_crossentropy = -(tf.multiply(y_true, tf.log()) +
                         tf.multiply((1-y_true), tf.log(tf.clip_by_value(1-y_pred, epsilon, 1-epsilon))))
 l1 = tf.abs(weights['encoder_h1'])
 cost = tf.reduce_mean(binary_crossentropy) + l1_lambda*tf.reduce_mean(l1)
