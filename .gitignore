@@ -95,3 +95,4 @@ ENV/
 .idea
 .DS_Store
 MNIST_data
+logs

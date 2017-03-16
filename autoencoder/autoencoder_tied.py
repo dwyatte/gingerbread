@@ -1,127 +1,129 @@
 # -*- coding: utf-8 -*-
 
-""" Auto Encoder Example.
-Using an auto encoder on MNIST handwritten digits.
-References:
-    Y. LeCun, L. Bottou, Y. Bengio, and P. Haffner. "Gradient-based
-    learning applied to document recognition." Proceedings of the IEEE,
-    86(11):2278-2324, November 1998.
-Links:
-    [MNIST Dataset] http://yann.lecun.com/exdb/mnist/
-"""
 from __future__ import division, print_function, absolute_import
 
-import tensorflow as tf
-import numpy as np
+import os
+
 import matplotlib.pyplot as plt
-
-# Import MNIST data
+import numpy as np
+import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
-mnist = input_data.read_data_sets("MNIST_data", one_hot=True)
+from utils.im import montage
+from utils.nn import dense, get_weights, get_biases
 
-# Parameters
+
+# params
 learning_rate = 0.01
-training_epochs = 50
+training_epochs = 10
 batch_size = 256
 test_step = 1
 examples_to_show = 10
 
-# Network Parameters
-n_hidden_1 = 32 # 1st layer num features
-n_hidden_2 = 16 # 2nd layer num features
-n_input = 784 # MNIST data input (img shape: 28*28)
+# network architecture
+n_hidden = [256, 128]
+n_input = 784
 
-# tf Graph input (only pictures)
-X = tf.placeholder("float", [None, n_input])
-
-weights = {
-    'encoder_h1': tf.Variable(tf.random_normal([n_input, n_hidden_1])),
-    'encoder_h2': tf.Variable(tf.random_normal([n_hidden_1, n_hidden_2])),
-}
-biases = {
-    'encoder_b1': tf.Variable(tf.random_normal([n_hidden_1])),
-    'encoder_b2': tf.Variable(tf.random_normal([n_hidden_2])),
-    'decoder_b2': tf.Variable(tf.random_normal([n_input])),
-}
+# other
+save_path = 'logs'
+save_file = 'tied_autoencoder_mnist_%s' % '_'.join(map(str, n_hidden))
 
 
-# Building the encoder
-def encoder(x):
-    # Encoder Hidden layer with sigmoid activation #1
-    layer_1 = tf.nn.sigmoid(tf.add(tf.matmul(x, weights['encoder_h1']),
-                                   biases['encoder_b1']))
-    # Decoder Hidden layer with sigmoid activation #2
-    layer_2 = tf.nn.sigmoid(tf.add(tf.matmul(layer_1, weights['encoder_h2']),
-                                   biases['encoder_b2']))
-    return layer_2
+def tied_autoencoder(input_tensor, input_dim, hidden_dims, act=None):
+    """
+    tied autoencoder
+    :param input_tensor: input tensor (placeholder)
+    :param input_dim: dimensions of layer for input tensor
+    :param hidden_dims: dimensions of hidden layers
+    :param act: activation function of each hidden layer
+    :return:
+    """
+    output_dim = input_dim
+
+    encoded = input_tensor
+    for i in range(len(hidden_dims)):
+        hidden_dim = hidden_dims[i]
+        encoded = dense(encoded, input_dim, hidden_dim, 'encoder%d' % (i+1), act=act)
+        input_dim = hidden_dim
+
+    decoded = encoded
+    for i in range(len(hidden_dims))[::-2]:
+        weights = get_weights('encoder%d' % (i+1))
+        biases = get_biases('encoder%d' % i)
+        if act:
+            decoded = act(tf.matmul(decoded, tf.transpose(weights)) + biases)
+        else:
+            decoded = tf.matmul(decoded, tf.transpose(weights)) + biases
+
+    weights = get_weights('encoder1')
+    biases = tf.get_variable('decoder%d/biases' % (i+2), shape=None, initializer=tf.zeros_initializer(output_dim))
+
+    return tf.nn.sigmoid(tf.matmul(decoded, tf.transpose(weights)) + biases)
 
 
-# Building the decoder
-def decoder(x):
-    # Encoder Hidden layer with sigmoid activation #1
-    layer_1 = tf.nn.sigmoid(tf.add(tf.matmul(x, tf.transpose(weights['encoder_h2'])),
-                                   biases['encoder_b1']))
-    # Decoder Hidden layer with sigmoid activation #2
-    layer_2 = tf.nn.sigmoid(tf.add(tf.matmul(layer_1, tf.transpose(weights['encoder_h1'])),
-                                   biases['decoder_b2']))
-    return layer_2
+if __name__ == '__main__':
+    # model
+    with tf.name_scope('input'):
+        X = tf.placeholder('float', [None, n_input])
+    y_pred = tied_autoencoder(X, n_input, n_hidden, act=tf.nn.relu)
 
-# Construct model
-encoder_op = encoder(X)
-decoder_op = decoder(encoder_op)
+    # loss
+    with tf.name_scope('loss'):
+        loss = tf.reduce_mean(tf.pow(y_pred-X, 2))
 
-# Prediction
-y_pred = decoder_op
-# Targets (Labels) are the input data.
-y_true = X
+    # optimizer
+    with tf.name_scope('optimizer'):
+        optimizer = tf.train.RMSPropOptimizer(learning_rate=learning_rate).minimize(loss)
 
-# Define loss and optimizer, minimize the squared error
-cost = tf.reduce_mean(tf.pow(y_true - y_pred, 2))
-optimizer = tf.train.RMSPropOptimizer(learning_rate).minimize(cost)
+    init = tf.global_variables_initializer()
+    saver = tf.train.Saver()
 
-# Initializing the variables
-init = tf.global_variables_initializer()
+    with tf.Session() as sess:
+        train_writer = tf.summary.FileWriter(save_path, sess.graph)
+        sess.run(init)
 
-# Launch the graph
-with tf.Session() as sess:
-    sess.run(init)
-    total_train_batch = int(mnist.train.num_examples / batch_size)
-    total_test_batch = int(mnist.test.num_examples / batch_size)
+        mnist = input_data.read_data_sets('MNIST_data')
+        n_train_batch = int(mnist.train.num_examples / batch_size)
+        n_test_batch = int(mnist.test.num_examples / batch_size)
 
-    # Training cycle
-    for epoch in range(training_epochs):
-        avg_train_cost = 0.
+        for epoch in range(training_epochs):
+            # average train loss
+            train_loss = 0.
 
-        # Loop over all batches
-        for i in range(total_train_batch):
-            batch_xs, batch_ys = mnist.train.next_batch(batch_size)
-            # Run optimization op (backprop) and cost op (to get loss value)
-            _, c = sess.run([optimizer, cost], feed_dict={X: batch_xs})
-            avg_train_cost += c / total_train_batch
+            for i in range(n_train_batch):
+                batch_xs, batch_ys = mnist.train.next_batch(batch_size)
+                _, l = sess.run([optimizer, loss], feed_dict={X: batch_xs})
+                train_loss += l / n_train_batch
 
-        log = "Epoch %04d:\ttrain cost=%.9f" % (epoch+1, avg_train_cost)
+                msg = 'Epoch %04d:\ttrain loss=%.9f' % (epoch+1, train_loss)
 
-        # Display train/test cost per test_step
-        if epoch % test_step == 0:
-            avg_test_cost = 0.
-            for j in range(total_test_batch):
-                batch_xs, batch_ys = mnist.test.next_batch(batch_size)
-                c = cost.eval(feed_dict={X: batch_xs})
-                avg_test_cost += c / total_test_batch
-            log += "\ttest cost=%.9f" % avg_test_cost
+            if epoch % test_step == 0:
+                # average test loss
+                test_loss = 0.
+                for j in range(n_test_batch):
+                    batch_xs, batch_ys = mnist.test.next_batch(batch_size)
+                    l = sess.run(loss, feed_dict={X: batch_xs})
+                    test_loss += l / n_test_batch
+                msg += '\ttest loss=%.9f' % test_loss
 
-        print(log)
+            print(msg)
 
-    print("Optimization Finished!")
+        saver.save(sess, os.path.join(save_path, save_file), global_step=epoch+1)
+        print('Checkpoint saved to %s' % os.path.join(save_path, save_file))
 
-    # Applying encode and decode over test set
-    encode_decode = sess.run(
-        y_pred, feed_dict={X: mnist.test.images[:examples_to_show]})
-    # Compare original images with their reconstructions
-    f, a = plt.subplots(2, 10, figsize=(10, 2))
-    for i in range(examples_to_show):
-        a[0][i].imshow(np.reshape(mnist.test.images[i], (28, 28)))
-        a[1][i].imshow(np.reshape(encode_decode[i], (28, 28)))
-    f.show()
-    plt.draw()
-    plt.waitforbuttonpress()
+        # Visualize reconstructions
+        reconstructions = sess.run(y_pred, feed_dict={X: mnist.test.images[:examples_to_show]})
+        plt.figure(figsize=(examples_to_show, 2))
+        for i in range(examples_to_show):
+            plt.subplot(2, examples_to_show, i+1)
+            plt.imshow(np.reshape(mnist.test.images[i], (28, 28)), cmap='gray')
+            plt.subplot(2, examples_to_show, examples_to_show+i+1)
+            plt.imshow(np.reshape(reconstructions[i], (28, 28)), cmap='gray')
+
+        # Visualize filters
+        plt.figure()
+        weights = sess.run(get_weights('encoder1'))
+        filters = montage(weights.reshape(1, 28, 28, n_hidden[0]).swapaxes(0, 3),
+                          scale=True)
+        plt.imshow(np.squeeze(filters), cmap='gray')
+
+        plt.show()
