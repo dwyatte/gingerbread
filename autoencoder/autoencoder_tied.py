@@ -14,7 +14,7 @@ from utils.nn import dense, get_weights, get_biases
 
 # params
 learning_rate = 0.01
-training_epochs = 10
+training_epochs = 20
 batch_size = 256
 test_step = 1
 examples_to_show = 10
@@ -39,12 +39,14 @@ def tied_autoencoder(input_tensor, input_dim, hidden_dims, act=None):
     """
     output_dim = input_dim
 
+    # standard dense layers
     encoded = input_tensor
     for i in range(len(hidden_dims)):
         hidden_dim = hidden_dims[i]
         encoded = dense(encoded, input_dim, hidden_dim, 'encoder%d' % (i+1), act=act)
         input_dim = hidden_dim
 
+    # symmetric dense layers, but using transpose of weights and biases from corresponding encoder layer
     decoded = encoded
     for i in range(len(hidden_dims))[::-2]:
         weights = get_weights('encoder%d' % (i+1))
@@ -54,6 +56,7 @@ def tied_autoencoder(input_tensor, input_dim, hidden_dims, act=None):
         else:
             decoded = tf.matmul(decoded, tf.transpose(weights)) + biases
 
+    # final biases for output
     weights = get_weights('encoder1')
     biases = tf.get_variable('decoder%d/biases' % (i+2), shape=None, initializer=tf.zeros_initializer(output_dim))
 
@@ -64,7 +67,7 @@ if __name__ == '__main__':
     # model
     with tf.name_scope('input'):
         X = tf.placeholder('float', [None, n_input])
-    y_pred = tied_autoencoder(X, n_input, n_hidden, act=tf.nn.relu)
+    y_pred = tied_autoencoder(X, n_input, n_hidden, act=tf.nn.sigmoid)
 
     # loss
     with tf.name_scope('loss'):
