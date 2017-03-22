@@ -61,7 +61,7 @@ class RNN(object):
 
     def calculate_loss(self, X, y):
         """
-        Mean cross entropy over the sentence. X is variable length, so we nead to use mean here
+        Mean cross entropy over the sentence. X is variable length, so we need to use mean here
         :param X:
         :param y:
         :return:
@@ -71,4 +71,3 @@ class RNN(object):
         logits = tf.log(clipped / (1-clipped))
         cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=y)
         return tf.reduce_mean(cross_entropy)
-
