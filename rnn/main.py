@@ -11,10 +11,15 @@ import numpy as np
 import tensorflow as tf
 from rnn import RNN
 
-vocabulary_size = 8000
+
 unknown_token = "UNKNOWN_TOKEN"
 sentence_start_token = "SENTENCE_START"
 sentence_end_token = "SENTENCE_END"
+
+vocabulary_size = 8000
+learning_rate = 0.01
+training_epochs = 20
+print_step = 100
 
 
 def train_with_sgd(model, X_train, y_train, learning_rate=0.005, nepoch=100, evaluate_loss_after=5):
@@ -87,6 +92,28 @@ print("\nExample sentence after Pre-processing: '%s'" % tokenized_sentences[0])
 # Create the training data
 X_train = np.asarray([[word_to_index[w] for w in sent[:-1]] for sent in tokenized_sentences])
 y_train = np.asarray([[word_to_index[w] for w in sent[1:]] for sent in tokenized_sentences])
+n_train = len(X_train)
 
-sess = tf.InteractiveSession()
 model = RNN(vocabulary_size)
+
+X = tf.placeholder(tf.int32, None)
+y = tf.placeholder(tf.int32, None)
+loss = model.calculate_loss(X, y)
+optimizer = tf.train.RMSPropOptimizer(learning_rate=learning_rate).minimize(loss)
+
+init = tf.global_variables_initializer()
+
+with tf.Session() as sess:
+    sess.run(init)
+
+    for epoch in range(training_epochs):
+        train_loss = 0.
+
+        for i, (t_prev, t) in enumerate(zip(X_train, y_train)):
+            _, l = sess.run([optimizer, loss], feed_dict={X: t_prev, y: t})
+            train_loss += l / print_step
+
+            if (i+1) % print_step == 0:
+                print('Epoch %d:\t%d/%d\tloss=%.9f' % (epoch+1, i+1, n_train, train_loss))
+                train_loss = 0.
+
