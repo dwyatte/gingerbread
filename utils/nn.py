@@ -12,10 +12,10 @@ def dense(input_tensor, input_dim, output_dim, layer_name, act):
     :return:
     """
     with tf.variable_scope(layer_name):
-        weights = tf.get_variable('weights', shape=[input_dim, output_dim],
+        weights = tf.get_variable('weights', shape=(input_dim, output_dim),
                                   initializer=tf.contrib.layers.xavier_initializer())
-        biases = tf.get_variable('biases', shape=None,
-                                 initializer=tf.zeros_initializer(output_dim))
+        biases = tf.get_variable('biases', shape=output_dim,
+                                 initializer=tf.zeros_initializer())
         if act:
             return act(tf.matmul(input_tensor, weights) + biases)
         else:

@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         pkg-config \
         python \
         python-dev \
-	python-tk \
+	    python-tk \
         rsync \
         software-properties-common \
         unzip \
@@ -22,7 +22,7 @@ RUN curl -O https://bootstrap.pypa.io/get-pip.py && \
     python get-pip.py && \
     rm get-pip.py
 
-COPY requirements.cpu.txt /
+COPY requirements.txt /
 
 RUN pip --no-cache-dir install -r requirements.cpu.txt && \
     python -m ipykernel.kernelspec

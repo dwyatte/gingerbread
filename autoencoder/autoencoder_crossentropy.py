@@ -61,8 +61,8 @@ def cross_entropy(y_pred, y_true):
     :return:
     """
     clipped = tf.clip_by_value(y_pred, epsilon, 1-epsilon)
-    logits = tf.log(clipped / (1 - clipped))
-    return tf.nn.sigmoid_cross_entropy_with_logits(logits, y_true)
+    logits = tf.log(clipped / (1-clipped))
+    return tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=y_true)
 
 
 if __name__ == '__main__':

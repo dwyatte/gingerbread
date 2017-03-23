@@ -58,7 +58,7 @@ def tied_autoencoder(input_tensor, input_dim, hidden_dims, act=None):
 
     # final biases for output
     weights = get_weights('encoder1')
-    biases = tf.get_variable('decoder%d/biases' % (i+2), shape=None, initializer=tf.zeros_initializer(output_dim))
+    biases = tf.get_variable('decoder%d/biases' % (i+2), shape=output_dim, initializer=tf.zeros_initializer())
 
     return tf.nn.sigmoid(tf.matmul(decoded, tf.transpose(weights)) + biases)
 
