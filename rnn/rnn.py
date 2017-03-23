@@ -4,9 +4,6 @@ from __future__ import division, print_function
 import tensorflow as tf
 
 
-EPSILON = 10e-7
-
-
 class RNN(object):
 
     def __init__(self, word_dim, hidden_dim=100):
@@ -47,7 +44,7 @@ class RNN(object):
         :return:
         """
         s = tf.scan(self._forward_prop_step, X, initializer=tf.zeros(shape=[self.hidden_dim]))
-        return tf.nn.softmax(tf.matmul(s, self.V))
+        return tf.matmul(s, self.V)
 
     def predict(self, X):
         """
@@ -55,7 +52,8 @@ class RNN(object):
         :param X:
         :return:
         """
-        return tf.argmax(self._forward_propagation(X), axis=0)
+        probs = tf.nn.softmax(self._forward_propagation(X))
+        return tf.argmax(probs, axis=0)
 
     def calculate_loss(self, X, y):
         """
@@ -64,8 +62,6 @@ class RNN(object):
         :param y:
         :return:
         """
-        y_pred = self._forward_propagation(X)
-        clipped = tf.clip_by_value(y_pred, EPSILON, 1-EPSILON)
-        logits = tf.log(clipped / (1-clipped))
+        logits = self._forward_propagation(X)
         cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=y)
         return tf.reduce_mean(cross_entropy)
