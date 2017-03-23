@@ -33,7 +33,8 @@ class RNN(object):
 
     def _forward_prop_step(self, s_t_prev, x_t):
         """
-        A single step of the unrolled sequence
+        A single step of the unrolled sequence. Note that we are indxing U by x_t.
+        This is the same as multiplying U with a one-hot vector.
         :param s_t_prev:
         :param x:
         :return:
