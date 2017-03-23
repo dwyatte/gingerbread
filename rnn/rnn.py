@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import division, print_function, absolute_import
+from __future__ import division, print_function
 import tensorflow as tf
 
 
@@ -36,7 +36,7 @@ class RNN(object):
         A single step of the unrolled sequence. Note that we are indxing U by x_t.
         This is the same as multiplying U with a one-hot vector.
         :param s_t_prev:
-        :param x:
+        :param x_t:
         :return:
         """
         return tf.nn.tanh(self.U[x_t, :] + tf.matmul(s_t_prev, self.W))

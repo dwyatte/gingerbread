@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+
+from __future__ import division, print_function
+
 import tensorflow as tf
 
 
@@ -40,4 +44,3 @@ def get_biases(layer_name):
     """
     with tf.variable_scope(layer_name, reuse=True):
         return tf.get_variable('biases')
-
