@@ -1,4 +1,4 @@
-FROM ubuntu:14.04
+FROM ubuntu:16.04
 
 # Pick up some TF dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -24,10 +24,10 @@ RUN curl -O https://bootstrap.pypa.io/get-pip.py && \
 
 COPY requirements.txt /
 
-RUN pip --no-cache-dir install -r requirements.cpu.txt && \
+RUN pip --no-cache-dir install -r requirements.txt && \
     python -m ipykernel.kernelspec
 
-RUN rm -f /requirements.cpu.txt
+RUN rm -f /requirements.txt
 
 # TensorBoard
 EXPOSE 6006

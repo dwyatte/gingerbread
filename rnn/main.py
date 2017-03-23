@@ -10,6 +10,7 @@ import numpy as np
 import tensorflow as tf
 from rnn import RNN
 
+nltk.data.path.insert(0, 'nltk_data')
 
 unknown_token = "UNKNOWN_TOKEN"
 sentence_start_token = "SENTENCE_START"
