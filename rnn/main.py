@@ -2,10 +2,9 @@
 
 from __future__ import division, print_function, absolute_import
 
-import sys
 import csv
 import itertools
-from datetime import datetime
+
 import nltk
 import numpy as np
 import tensorflow as tf
@@ -20,40 +19,6 @@ vocabulary_size = 8000
 learning_rate = 0.01
 training_epochs = 20
 print_step = 100
-
-
-def train_with_sgd(model, X_train, y_train, learning_rate=0.005, nepoch=100, evaluate_loss_after=5):
-    """
-    # Outer SGD Loop
-    :param model: The RNN model instance
-    :param X_train: The training data set
-    :param y_train: The training data labels
-    :param learning_rate: Initial learning rate for SGD
-    :param nepoch: Number of times to iterate through the complete dataset
-    :param evaluate_loss_after: Evaluate the loss after this many epochs
-    :return:
-    """
-    # We keep track of the losses so we can plot them later
-    losses = []
-    num_examples_seen = 0
-    for epoch in range(nepoch):
-        # Optionally evaluate the loss
-        if epoch % evaluate_loss_after == 0:
-            loss = model.calculate_loss(X_train, y_train)
-            losses.append((num_examples_seen, loss))
-            time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            print("%s: Loss after num_examples_seen=%d epoch=%d: %f" % (time, num_examples_seen, epoch, loss))
-            # Adjust the learning rate if loss increases
-            if len(losses) > 1 and losses[-1][1] > losses[-2][1]:
-                learning_rate *= 0.5
-                print("Setting learning rate to %f" % learning_rate)
-            sys.stdout.flush()
-        # For each training example...
-        for i in range(len(y_train)):
-            # One SGD step
-            model.sgd_step(X_train[i], y_train[i], learning_rate)
-            num_examples_seen += 1
-
 
 # Read the data and append SENTENCE_START and SENTENCE_END tokens
 print("Reading CSV file...")
@@ -94,7 +59,7 @@ X_train = np.asarray([[word_to_index[w] for w in sent[:-1]] for sent in tokenize
 y_train = np.asarray([[word_to_index[w] for w in sent[1:]] for sent in tokenized_sentences])
 n_train = len(X_train)
 
-model = RNN(vocabulary_size)
+model = RNN(vocabulary_size, hidden_dim=50)
 
 X = tf.placeholder(tf.int32, None)
 y = tf.placeholder(tf.int32, None)
@@ -116,4 +81,3 @@ with tf.Session() as sess:
             if (i+1) % print_step == 0:
                 print('Epoch %d:\t%d/%d\tloss=%.9f' % (epoch+1, i+1, n_train, train_loss))
                 train_loss = 0.
-
