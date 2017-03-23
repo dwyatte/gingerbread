@@ -15,12 +15,8 @@ class RNN(object):
         :param word_dim:
         :param hidden_dim:
         """
-
-        # params
         self.word_dim = word_dim
         self.hidden_dim = hidden_dim
-
-        # graph
         self.U = tf.get_variable('U', shape=(word_dim, hidden_dim),
                                  initializer=tf.random_uniform_initializer(-tf.sqrt(1. / word_dim),
                                                                            tf.sqrt(1. / word_dim)))
@@ -33,23 +29,24 @@ class RNN(object):
 
     def _forward_prop_step(self, s_t_prev, x_t):
         """
-        A single step of the unrolled sequence. Note that we are indxing U by x_t.
-        This is the same as multiplying U with a one-hot vector.
+        A single step of the unrolled sequence.
         :param s_t_prev:
         :param x_t:
         :return:
         """
-        return tf.nn.tanh(self.U[x_t, :] + tf.matmul(s_t_prev, self.W))
+        # make atleast 2d
+        s_t_prev = tf.reshape(s_t_prev, [1, self.hidden_dim])
+        # Note that we are indxing U by x_t. This is the same as multiplying U with a one-hot vector.
+        s_t = tf.nn.tanh(self.U[x_t, :] + tf.matmul(s_t_prev, self.W))
+        return tf.reshape(s_t, [self.hidden_dim])
 
     def _forward_propagation(self, X):
         """
-        Forward propagate with scan operation. Note that scan will insert a singleton dimension along axis=1
-        when operating on a vector, so we squeeze it out
+        Forward propagate with scan operation.
         :param X:
         :return:
         """
-        s = tf.scan(self._forward_prop_step, X, initializer=tf.zeros(shape=(1, self.hidden_dim)))
-        s = tf.squeeze(s)
+        s = tf.scan(self._forward_prop_step, X, initializer=tf.zeros(shape=[self.hidden_dim]))
         return tf.nn.softmax(tf.matmul(s, self.V))
 
     def predict(self, X):
