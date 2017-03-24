@@ -71,7 +71,7 @@ seqlen = tf.placeholder(tf.int32, [None])
 # * outputs of hidden state are returned, so we need to multiply by output weights ourselves
 embedding = tf.get_variable('embedding', shape=(vocabulary_size, num_units))
 inputs = tf.nn.embedding_lookup(embedding, X)
-cell = tf.contrib.rnn.BasicRNNell(num_units=num_units)
+cell = tf.contrib.rnn.BasicRNNCell(num_units=num_units)
 outputs, states = tf.nn.dynamic_rnn(
     cell=cell,
     sequence_length=seqlen,
