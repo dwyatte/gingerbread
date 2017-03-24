@@ -116,6 +116,5 @@ with tf.Session() as sess:
 
             _, l = sess.run([optimizer, loss],
                             feed_dict={X: batch_x, y: batch_y, mask: batch_mask, seqlen: batch_seqlen})
-            train_loss = l / batch_x.shape[0]
 
-            print('Epoch %04d:\t%04d/%04d\tloss=%.9f' % (epoch+1, i+1, len(X_train), train_loss))
+            print('Epoch %04d:\t%04d/%04d\tloss=%.9f' % (epoch+1, i+1, len(X_train), l))
