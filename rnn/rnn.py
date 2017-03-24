@@ -57,7 +57,7 @@ class RNN(object):
 
     def calculate_loss(self, X, y):
         """
-        Mean cross entropy over the sentence. X is variable length, so we need to take the mean here
+        Mean cross entropy over the sequence. X is variable length, so we need to take the mean here
         :param X:
         :param y:
         :return:

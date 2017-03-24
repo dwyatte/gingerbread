@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-# This is not strictly correctly because it does not one-hot encode the sequences, but does show how to use dynamic_rnn
-
 from __future__ import division, print_function
 
 import csv
@@ -25,7 +23,7 @@ num_units = 50
 
 # Read the data and append SENTENCE_START and SENTENCE_END tokens
 print("Reading CSV file...")
-with open('data/reddit-comments-2015-08.csv', 'rb') as f:
+with open('data/reddit-comments-2015-08_small.csv', 'rb') as f:
     reader = csv.reader(f, skipinitialspace=True)
     reader.next()
     # Split full comments into sentences
@@ -63,7 +61,7 @@ y_train = np.asarray([[word_to_index[w] for w in sent[1:]] for sent in tokenized
 l_train = np.asarray(map(len, X_train))
 max_l = max(l_train)
 
-X = tf.placeholder(tf.float32, [None, max_l, 1])
+X = tf.placeholder(tf.float32, [None, max_l, vocabulary_size])
 y = tf.placeholder(tf.int32, [None, max_l])
 mask = tf.placeholder(tf.float32, [None, max_l])
 seqlen = tf.placeholder(tf.float32, [None])
@@ -108,10 +106,10 @@ with tf.Session() as sess:
             # Mask of valid places in each obs
             batch_mask = np.arange(max_l) < batch_seqlen[:, None]
 
-            # Setup output array and put elements from data into masked positions
-            batch_x = np.zeros(batch_mask.shape)
+            # Setup output array and put elements from data into masked positions, convert to one-hot
+            batch_x = np.zeros(batch_mask.shape).astype('int')
             batch_x[batch_mask] = np.hstack((X_train[i:i+batch_size]))
-            batch_x = batch_x[:, :, None]
+            batch_x = np.eye(vocabulary_size)[batch_x]
 
             batch_y = np.zeros(batch_mask.shape)
             batch_y[batch_mask] = np.hstack((y_train[i:i+batch_size]))
