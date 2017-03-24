@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+# This is not strictly correctly because it does not one-hot encode the sequences, but does show how to use dynamic_rnn
+
 from __future__ import division, print_function
 
 import csv
