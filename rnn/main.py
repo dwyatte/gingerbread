@@ -60,10 +60,10 @@ X_train = np.asarray([[word_to_index[w] for w in sent[:-1]] for sent in tokenize
 y_train = np.asarray([[word_to_index[w] for w in sent[1:]] for sent in tokenized_sentences])
 n_train = len(X_train)
 
-model = RNN(vocabulary_size, hidden_dim=50)
-
 X = tf.placeholder(tf.int32, None)
 y = tf.placeholder(tf.int32, None)
+
+model = RNN(vocabulary_size, hidden_dim=50)
 loss = model.calculate_loss(X, y)
 optimizer = tf.train.RMSPropOptimizer(learning_rate=learning_rate).minimize(loss)
 
