@@ -23,7 +23,7 @@ num_units = 50
 
 # Read the data and append SENTENCE_START and SENTENCE_END tokens
 print("Reading CSV file...")
-with open('data/reddit-comments-2015-08_small.csv', 'rb') as f:
+with open('data/reddit-comments-2015-08.csv', 'rb') as f:
     reader = csv.reader(f, skipinitialspace=True)
     reader.next()
     # Split full comments into sentences
@@ -61,27 +61,32 @@ y_train = np.asarray([[word_to_index[w] for w in sent[1:]] for sent in tokenized
 l_train = np.asarray(map(len, X_train))
 max_l = max(l_train)
 
-X = tf.placeholder(tf.float32, [None, max_l, vocabulary_size])
+X = tf.placeholder(tf.int32, [None, max_l])
 y = tf.placeholder(tf.int32, [None, max_l])
 mask = tf.placeholder(tf.float32, [None, max_l])
-seqlen = tf.placeholder(tf.float32, [None])
+seqlen = tf.placeholder(tf.int32, [None])
 
-# rnn -- only returns the hidden states, not the outputs, so we need to handle that ourselves with weights
+# rnn
+# * use embedding to do one-hot lookup
+# * outputs of hidden state are returned, so we need to multiply by output weights ourselves
+embedding = tf.get_variable('embedding', shape=(vocabulary_size, num_units))
+inputs = tf.nn.embedding_lookup(embedding, X)
 cell = tf.contrib.rnn.BasicRNNCell(num_units=num_units)
 outputs, states = tf.nn.dynamic_rnn(
     cell=cell,
     sequence_length=seqlen,
-    inputs=X,
+    inputs=inputs,
     dtype=tf.float32
 )
-weights = tf.get_variable('weights', shape=(num_units, vocabulary_size), initializer=tf.random_normal_initializer())
+output_weights = tf.get_variable('output_weights', shape=(num_units, vocabulary_size),
+                                 initializer=tf.random_normal_initializer())
 
 # Variable length sequences are a bit difficult in tensorflow. This was helpful:
 # https://danijar.com/variable-sequence-lengths-in-tensorflow/
 
 # 1.) we reshape the outputs so that we can just multiply every step by our weights
 outputs = tf.reshape(outputs, [-1, num_units])
-logits = tf.matmul(outputs, weights)
+logits = tf.matmul(outputs, output_weights)
 logits = tf.reshape(logits, [-1, max_l, vocabulary_size])
 
 # 2.) we need to mask off just steps we actually used
@@ -107,9 +112,8 @@ with tf.Session() as sess:
             batch_mask = np.arange(max_l) < batch_seqlen[:, None]
 
             # Setup output array and put elements from data into masked positions, convert to one-hot
-            batch_x = np.zeros(batch_mask.shape).astype('int')
+            batch_x = np.zeros(batch_mask.shape)
             batch_x[batch_mask] = np.hstack((X_train[i:i+batch_size]))
-            batch_x = np.eye(vocabulary_size)[batch_x]
 
             batch_y = np.zeros(batch_mask.shape)
             batch_y[batch_mask] = np.hstack((y_train[i:i+batch_size]))
