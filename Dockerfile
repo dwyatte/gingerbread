@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         pkg-config \
         python \
         python-dev \
-	    python-tk \
+	python-tk \
         rsync \
         software-properties-common \
         unzip \
