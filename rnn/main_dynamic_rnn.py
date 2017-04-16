@@ -26,7 +26,6 @@ print("Reading CSV file...")
 with open('data/reddit-comments-2015-08.csv', 'rb') as f:
     f.readline()
     reader = csv.reader(f, skipinitialspace=True)
-    reader.__next__()
     # Split full comments into sentences
     sentences = itertools.chain(*[nltk.sent_tokenize(x[0].decode('utf-8').lower()) for x in reader])
     # Append SENTENCE_START and SENTENCE_END
