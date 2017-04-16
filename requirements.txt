@@ -10,7 +10,6 @@ decorator==4.0.11
 entrypoints==0.2.2
 enum34==1.1.6
 funcsigs==1.0.2
-functools32==3.2.3.post2
 html5lib==0.999999999
 ipykernel==4.5.2
 ipython==5.3.0
@@ -50,7 +49,6 @@ scandir==1.5
 simplegeneric==0.8.1
 singledispatch==3.4.0.3
 six==1.10.0
-subprocess32==3.2.7
 tensorflow==1.0.0
 terminado==0.6
 testpath==0.3

@@ -23,11 +23,11 @@ num_units = 50
 
 # Read the data and append SENTENCE_START and SENTENCE_END tokens
 print("Reading CSV file...")
-with open('data/reddit-comments-2015-08.csv', 'rb') as f:
+with open('data/reddit-comments-2015-08.csv') as f:
     reader = csv.reader(f, skipinitialspace=True)
-    reader.next()
+    reader.__next__()
     # Split full comments into sentences
-    sentences = itertools.chain(*[nltk.sent_tokenize(x[0].decode('utf-8').lower()) for x in reader])
+    sentences = itertools.chain(*[nltk.sent_tokenize(x[0].lower()) for x in reader])
     # Append SENTENCE_START and SENTENCE_END
     sentences = ["%s %s %s" % (sentence_start_token, x, sentence_end_token) for x in sentences]
 print("Parsed %d sentences." % (len(sentences)))
@@ -58,7 +58,7 @@ print("\nExample sentence after Pre-processing: '%s'" % tokenized_sentences[0])
 # Create the training data. We need to keep track of the max sequence length for padding
 X_train = np.asarray([[word_to_index[w] for w in sent[:-1]] for sent in tokenized_sentences])
 y_train = np.asarray([[word_to_index[w] for w in sent[1:]] for sent in tokenized_sentences])
-l_train = np.asarray(map(len, X_train))
+l_train = np.asarray([len(x) for x in X_train])
 max_l = max(l_train)
 
 X = tf.placeholder(tf.int32, [None, max_l])
