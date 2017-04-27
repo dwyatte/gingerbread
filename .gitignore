@@ -97,3 +97,4 @@ ENV/
 MNIST_data
 nltk_data
 logs
+*.npy
