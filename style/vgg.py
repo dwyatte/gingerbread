@@ -76,25 +76,3 @@ class VGG16:
 
     def get_bias(self, name):
         return tf.constant(self.data_dict[name][1], name="biases")
-
-    def get_layer_dict(self):
-        return {
-            'conv1_1':  self.conv1_1,
-            'conv1_2':  self.conv1_2,
-            'pool1':    self.pool1,
-            'conv2_1':  self.conv2_1,
-            'conv2_2':  self.conv2_2,
-            'pool2':    self.pool2,
-            'conv3_1':  self.conv3_1,
-            'conv3_2':  self.conv3_2,
-            'conv3_3':  self.conv3_3,
-            'pool3':    self.pool3,
-            'conv4_1':  self.conv4_1,
-            'conv4_2':  self.conv4_2,
-            'conv4_3':  self.conv4_3,
-            'pool4':    self.pool4,
-            'conv5_1':  self.conv5_1,
-            'conv5_2':  self.conv5_2,
-            'conv5_3':  self.conv5_3,
-            'pool5':    self.pool5
-        }

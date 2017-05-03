@@ -70,10 +70,9 @@ style_image = np.expand_dims(style_image, 0)
 input_tensor = tf.placeholder('float32', [1, ] + OUTPUT_SIZE)
 model = VGG16()
 model.build(input_tensor)
-layer_dict = model.get_layer_dict()
 
-content = sess.run([layer_dict[layer] for layer in CONTENT_LAYERS], feed_dict={input_tensor: content_image})
-style = sess.run([layer_dict[layer] for layer in STYLE_LAYERS], feed_dict={input_tensor: style_image})
+content = sess.run([getattr(model, layer) for layer in CONTENT_LAYERS], feed_dict={input_tensor: content_image})
+style = sess.run([getattr(model, layer) for layer in STYLE_LAYERS], feed_dict={input_tensor: style_image})
 
 ########################################################################################################################
 # recreate the session but connect to an input image that we will optimize
@@ -88,14 +87,13 @@ combined_image = tf.get_variable('combined_image', initializer=combined_image)
 
 model = VGG16()
 model.build(combined_image)
-layer_dict = model.get_layer_dict()
 
 sum_content_loss = tf.convert_to_tensor(0.)
-for c1, c2 in zip(content, [layer_dict[layer] for layer in CONTENT_LAYERS]):
+for c1, c2 in zip(content, [getattr(model, layer) for layer in CONTENT_LAYERS]):
     sum_content_loss += (1./len(content)) * content_loss(tf.constant(c1), c2)
 
 sum_style_loss = tf.convert_to_tensor(0.)
-for s1, s2 in zip(style, [layer_dict[layer] for layer in STYLE_LAYERS]):
+for s1, s2 in zip(style, [getattr(model, layer) for layer in STYLE_LAYERS]):
     sum_style_loss += (1./len(style)) * style_loss(tf.constant(s1), s2)
 
 total_loss = CONTENT_WEIGHT*sum_content_loss + STYLE_WEIGHT*sum_style_loss
