@@ -42,15 +42,13 @@ def autoencoder(input_tensor, input_dim, hidden_dims, act=None):
 
     encoded = input_tensor
     for i, hidden_dim in enumerate(hidden_dims):
-        encoded = dense(encoded, input_dim, hidden_dim, 'encoder%d' % (i+1), act=act)
-        input_dim = hidden_dim
+        encoded = dense(encoded, hidden_dim, 'encoder%d' % (i+1), act=act)
 
     decoded = encoded
     for i, hidden_dim in enumerate(reversed(hidden_dims[:-1])):
-        decoded = dense(decoded, input_dim, hidden_dim, 'decoder%d' % (i+1), act=act)
-        input_dim = hidden_dim
+        decoded = dense(decoded, hidden_dim, 'decoder%d' % (i+1), act=act)
 
-    return dense(decoded, hidden_dim, output_dim, 'decoder%d' % (i+2), act=tf.nn.sigmoid)
+    return dense(decoded, output_dim, 'decoder%d' % (i+2), act=tf.nn.sigmoid)
 
 
 def cross_entropy(y_pred, y_true):

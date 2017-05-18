@@ -43,8 +43,7 @@ def tied_autoencoder(input_tensor, input_dim, hidden_dims, act=None):
     encoded = input_tensor
     for i in range(len(hidden_dims)):
         hidden_dim = hidden_dims[i]
-        encoded = dense(encoded, input_dim, hidden_dim, 'encoder%d' % (i+1), act=act)
-        input_dim = hidden_dim
+        encoded = dense(encoded, hidden_dim, 'encoder%d' % (i+1), act=act)
 
     # symmetric dense layers, but using transpose of weights and biases from corresponding encoder layer
     decoded = encoded

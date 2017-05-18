@@ -5,7 +5,7 @@ from __future__ import division, print_function
 import tensorflow as tf
 
 
-def dense(input_tensor, input_dim, output_dim, layer_name, act):
+def dense(input_tensor, output_dim, layer_name, act):
     """
     simple dense/fully-connected layer
     :param input_tensor: input tensor
@@ -16,7 +16,7 @@ def dense(input_tensor, input_dim, output_dim, layer_name, act):
     :return:
     """
     with tf.variable_scope(layer_name):
-        weights = tf.get_variable('weights', shape=(input_dim, output_dim),
+        weights = tf.get_variable('weights', shape=(input_tensor.get_shape()[1], output_dim),
                                   initializer=tf.contrib.layers.xavier_initializer())
         biases = tf.get_variable('biases', shape=output_dim,
                                  initializer=tf.zeros_initializer())
