@@ -28,16 +28,14 @@ save_path = 'logs'
 save_file = 'tied_autoencoder_mnist_%s' % '_'.join(map(str, n_hidden))
 
 
-def tied_autoencoder(input_tensor, input_dim, hidden_dims, act=None):
+def tied_autoencoder(input_tensor, hidden_dims, act=None):
     """
     tied autoencoder
     :param input_tensor: input tensor (placeholder)
-    :param input_dim: dimensions of layer for input tensor
     :param hidden_dims: dimensions of hidden layers
     :param act: activation function of each hidden layer
     :return:
     """
-    output_dim = input_dim
 
     # standard dense layers
     encoded = input_tensor
@@ -57,7 +55,7 @@ def tied_autoencoder(input_tensor, input_dim, hidden_dims, act=None):
 
     # final biases for output
     weights = get_weights('encoder1')
-    biases = tf.get_variable('decoder%d/biases' % (i+2), shape=output_dim, initializer=tf.zeros_initializer())
+    biases = tf.get_variable('decoder%d/biases' % (i+2), shape=input_tensor.get_shape()[1], initializer=tf.zeros_initializer())
 
     return tf.nn.sigmoid(tf.matmul(decoded, tf.transpose(weights)) + biases)
 
@@ -66,7 +64,7 @@ if __name__ == '__main__':
     # model
     with tf.name_scope('input'):
         X = tf.placeholder('float', [None, n_input])
-    y_pred = tied_autoencoder(X, n_input, n_hidden, act=tf.nn.sigmoid)
+    y_pred = tied_autoencoder(X, n_hidden, act=tf.nn.sigmoid)
 
     # loss
     with tf.name_scope('loss'):

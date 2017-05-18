@@ -29,16 +29,14 @@ save_path = 'logs'
 save_file = 'autoencoder_mnist_%s' % '_'.join(map(str, n_hidden))
 
 
-def autoencoder(input_tensor, input_dim, hidden_dims, act=None):
+def autoencoder(input_tensor, hidden_dims, act=None):
     """
     simple symmetric autoencoder with sigmoidal reconstruction
-    :param input_tensor: input tensor (placeholder)
-    :param input_dim: dimensions of layer for input tensor
+    :param input_tensor: input tensor (placeholder)    
     :param hidden_dims: dimensions of hidden layers
     :param act: activation function of each hidden layer
     :return:
     """
-    output_dim = input_dim
 
     encoded = input_tensor
     for i, hidden_dim in enumerate(hidden_dims):
@@ -48,7 +46,7 @@ def autoencoder(input_tensor, input_dim, hidden_dims, act=None):
     for i, hidden_dim in enumerate(reversed(hidden_dims[:-1])):
         decoded = dense(decoded, hidden_dim, 'decoder%d' % (i+1), act=act)
 
-    return dense(decoded, output_dim, 'decoder%d' % (i+2), act=tf.nn.sigmoid)
+    return dense(decoded, input_tensor.get_shape()[1], 'decoder%d' % (i+2), act=tf.nn.sigmoid)
 
 
 def cross_entropy(y_pred, y_true):
@@ -67,7 +65,7 @@ if __name__ == '__main__':
     # model
     with tf.name_scope('input'):
         X = tf.placeholder('float', [None, n_input])
-    y_pred = autoencoder(X, n_input, n_hidden, act=tf.nn.relu)
+    y_pred = autoencoder(X, n_hidden, act=tf.nn.relu)
 
     # loss
     with tf.name_scope('loss'):
