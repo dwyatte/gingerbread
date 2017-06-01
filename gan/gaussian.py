@@ -6,14 +6,15 @@ import matplotlib.pyplot as plt
 from utils.nn import dense
 
 
-TRAINING_EPOCHS = 1200
-BATCH_SIZE = 12
+TRAINING_EPOCHS = 1000
+BATCH_SIZE = 100
 LOG_STEP = 10
 DATA_MU = 4
 DATA_SIGMA = 0.5
 GENERATOR_RANGE = 8
 HIDDEN_SIZE = 4
 LEARNING_RATE = 0.03
+SAVE_PATH = 'logs'
 
 
 def generator(input, h_dim):
@@ -40,9 +41,9 @@ with tf.variable_scope('Generator'):
 # We create two copies that share parameters since the same network cannot be used w/ different inputs
 with tf.variable_scope('Discriminator') as scope:
     x = tf.placeholder(tf.float32, shape=(BATCH_SIZE, 1))
-    D1 = discriminator(x, HIDDEN_SIZE)
+    D1 = discriminator(x, HIDDEN_SIZE)  # D1 gets real data
     scope.reuse_variables()
-    D2 = discriminator(G, HIDDEN_SIZE)
+    D2 = discriminator(G, HIDDEN_SIZE)  # D2 gets generated data
 
 # Loss and optimizer for each network (see the original paper for details)
 loss_d = tf.reduce_mean(-tf.log(D1) - tf.log(1 - D2))
@@ -59,6 +60,7 @@ opt_g = tf.train.GradientDescentOptimizer(LEARNING_RATE).minimize(loss_g, var_li
 ####################################################################################################################
 sess = tf.InteractiveSession()
 sess.run(tf.global_variables_initializer())
+train_writer = tf.summary.FileWriter(SAVE_PATH, sess.graph)
 
 for epoch in range(TRAINING_EPOCHS):
     # update discriminator
