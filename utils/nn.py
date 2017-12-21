@@ -5,7 +5,7 @@ from __future__ import division, print_function
 import tensorflow as tf
 
 
-def dense(input_tensor, output_dim, layer_name, act):
+def dense(input_tensor, output_dim, layer_name, act=None):
     """
     simple dense/fully-connected layer
     :param input_tensor: input tensor
@@ -15,8 +15,9 @@ def dense(input_tensor, output_dim, layer_name, act):
     :param act: activation function (linear if none)
     :return:
     """
-    with tf.variable_scope(layer_name):
-        weights = tf.get_variable('weights', shape=(input_tensor.get_shape()[1], output_dim),
+    input_dim = input_tensor.get_shape()[-1]
+    with tf.variable_scope(layer_name):        
+        weights = tf.get_variable('weights', shape=(input_dim, output_dim),
                                   initializer=tf.contrib.layers.xavier_initializer())
         biases = tf.get_variable('biases', shape=output_dim,
                                  initializer=tf.zeros_initializer())
@@ -24,6 +25,24 @@ def dense(input_tensor, output_dim, layer_name, act):
             return act(tf.matmul(input_tensor, weights) + biases)
         else:
             return tf.matmul(input_tensor, weights) + biases
+
+
+def conv2d(input_tensor, filters, kernel_size, layer_name, act, 
+           strides=[1, 1, 1, 1], padding='SAME'):
+    """
+    simple conv2d layer
+    """
+    input_dim = input_tensor.get_shape()[-1]
+    with tf.variable_scope(layer_name):        
+        kernel = tf.get_variable('weights', 
+                                 shape=kernel_size + [input_dim, filters], 
+                                 initializer=tf.contrib.layers.xavier_initializer())
+        biases = tf.get_variable('biases', shape=[filters],
+                                 initializer=tf.zeros_initializer())
+        if act:
+            return act(tf.nn.conv2d(input_tensor, kernel, strides, padding) + biases)
+        else:
+            return tf.nn.conv2d(input_tensor, kernel, strides, padding) + biases
 
 
 def get_weights(layer_name):
